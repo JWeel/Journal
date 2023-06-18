@@ -5,15 +5,41 @@
     --text-color-primary: #aaa6b1;
     --text-color-hover: #ddd;
     --border-color: #999;
+    --github-src: url("/svg/github.svg");
     --background-primary-alt: #FFF;
     --background-secondary-alt: #EEE;
     --background-widget-alt: #d0c5eeb0;
     --text-color-primary-alt: #121212;
     --text-color-hover-alt: #A7A;
     --border-color-alt: #999;
+    --github-src-alt: url("/svg/github-alt.svg");
+    --code-background: #171023;
+    --code-method: #DCDCAA;
+    --code-class: #4EC9B0;
+    --code-comment: #6A9955;
+    --code-keyword: #569cd6;
+    --code-interface: #b8d7a3;
+    --code-typeParam: #b8d7a3;
+    --code-control: #C586C0;
+    --code-struct: #86C691;
+    --code-punctuation: #dfdfdf;
+    --code-localName: #9CDCFE;
+    --code-parameter: #9CDCFE;
+    --code-background-alt: #FFF;
+    --code-method-alt: #6b6b52;
+    --code-class-alt: #338373;
+    --code-comment-alt: #4f723f;
+    --code-keyword-alt: #396c96;
+    --code-interface-alt: #7f9471;
+    --code-typeParam-alt: #879d78;
+    --code-control-alt: #875e83;
+    --code-struct-alt: #609068;
+    --code-punctuation-alt: #78757b;
+    --code-localName-alt: #6f9db6;
+    --code-parameter-alt: #73a1ba;
 }
 body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Arial, Helvetica, sans-serif;
     margin: 0;
 }
 body>article {
@@ -29,8 +55,21 @@ body>article {
     --text-color-primary: var(--text-color-primary-alt);
     --text-color-hover: var(--text-color-hover-alt);
     --border-color: var(--border-color-alt);
+    --github-src: var(--github-src-alt);
+    --code-background: var(--code-background-alt);
+    --code-method: var(--code-method-alt);
+    --code-class: var(--code-class-alt);
+    --code-comment: var(--code-comment-alt);
+    --code-keyword: var(--code-keyword-alt);
+    --code-interface: var(--code-interface-alt);
+    --code-typeParam: var(--code-typeParam-alt);
+    --code-control: var(--code-control-alt);
+    --code-struct: var(--code-struct-alt);
+    --code-punctuation: var(--code-punctuation-alt);
+    --code-localName: var(--code-localName-alt);
+    --code-parameter: var(--code-parameter-alt);
 }
-#night:not(:checked)~article b {
+#night:not(:checked)~article b, #night:not(:checked)~article .box h2 {
     color: #505;
 }
 #night:not(:checked)~article .accent {
@@ -54,13 +93,10 @@ body>article {
     accent-color: darkgray;
 }
 #night::before {
-    content: 'Night Mode';
-    position: relative;
-    display: inline-block;
-    right: 5.5em;
-    bottom: 0.2em;
-    margin-right: -5em;
-    font-family: Arial, Helvetica, sans-serif;
+    content: 'Night';
+    position: fixed;
+    right: 3em;
+    font-family: 'Segoe UI', Tahoma, Arial, Helvetica, sans-serif;
 }
 #night:not(:checked)::before {
     color: var(--text-color-primary-alt);
@@ -88,13 +124,24 @@ header {
     position: sticky;
     top: 0;
     z-index: 1;
-    font-size: large;
     background-color: var(--background-secondary);
     border-bottom: solid 1.5px var(--border-color);
     box-sizing: border-box;
 }
-header a {
-    margin-left: 10px;
+nav img {
+    vertical-align: text-top;
+}
+nav span:first-child a:first-child {
+    font-weight: 500;
+}
+#nav-github, #nav-linkedin {
+    vertical-align: middle;
+}
+#nav-github>img {
+    content: var(--github-src);
+}
+#nav-linkedin>img {
+    content: url("/svg/linkedin.svg");
 }
 footer {
     background-color: var(--background-secondary);
@@ -119,6 +166,9 @@ li>h3 {
     margin-top: -1em;
     white-space: pre-line;
 }
+.blog h1+p {
+    margin-top: -3em;
+}
 .blog h1 {
     margin: 0 0 1.3em 0;
     padding-bottom: 0.35em;
@@ -140,7 +190,6 @@ a.accent:hover {
 .box {
     background-color: var(--background-widget);
     color: var(--text-color-primary);
-    /* color: #ffffff8c; */
     border-radius: 6px;
     box-shadow: 0 2px 3px rgba(200, 200, 200, 0.12),
         0 2px 3px rgba(250, 250, 250, 0.64),
@@ -148,43 +197,86 @@ a.accent:hover {
     font-weight: normal;
     line-height: 1.75;
 }
-.box h2, b {
-    color: #FFFFFFDD;
-}
-.box a:hover {
-    color: #FFF;
-}
 .box p {
     line-height: 140%;
     margin: 16px 0 24px;
     font-size: 12pt;
 }
+pre.background {
+    font-family: monaco, Consolas, LucidaConsole, monospace;
+    background-color: var(--background-primary);
+    overflow: auto;
+    color: var(--code-punctuation);
+    margin: -8px 0px -16px -160px;
+    font-size: 14px;
+}
+pre.background:last-child {
+    margin-bottom: 36px;
+}
+pre.background * {
+    font-size: 14px;
+}
+.method {
+    color: var(--code-method);
+}
+.class {
+    color: var(--code-class);
+}
+.comment {
+    color: var(--code-comment);
+}
+.keyword {
+    color: var(--code-keyword);
+}
+.interface {
+    color: var(--code-interface);
+}
+.typeParam {
+    color: var(--code-typeParam);
+}
+.control {
+    color: var(--code-control);
+}
+.struct {
+    color: var(--code-struct);
+}
+.punctuation {
+    color: var(--code-punctuation);
+}
+.localName {
+    color: var(--code-localName);
+}
+.parameter {
+    color: var(--code-parameter);
+}
 @media screen and (min-width: 1px) {
     #night {
-        top: 1em;
+        top: 12px;
+        height: 15px;
     }
     #night::before {
-        font-size: medium;
-    }
-    .small-only {
-        display: inline;
+        font-size: 15px;
+        top: 12px;
+        transform: translate(-50%, 0%);
     }
     .box {
         max-width: 80%;
     }
-    header {
-        padding-bottom: 12px;
+    nav {
+        padding: 12px 32px;
+        font-size: 15px;
     }
-    nav>.nav-top {
-        display: none;
+    nav span:not(:last-child) {
+        margin-right: 12px;
     }
-    nav>.nav-bottom {
-        padding-left: 16px;
-        padding-top: 12px;
-        font-size: medium;
+    nav span:first-child a:first-child {
+        margin-right: 12px;
+    }
+    nav img {
+        max-height: 15px;
     }
     p, span {
-        font-size: medium;
+        font-size: 15px;
     }
 }
 @media screen and (min-width: 500px) {
@@ -196,33 +288,31 @@ a.accent:hover {
 }
 @media screen and (min-width: 700px) {
     #night {
-        top: 4.65em;
+        top: 24px;
+        height: 18px;
     }
     #night::before {
-        font-size: large;
+        font-size: 18px;
+        top: 24px;
+        transform: translate(-20%, -5%);
     }
-    .small-only {
-        display: none;
+    nav {
+        padding: 24px 2em;
+        font-size: 18px;
     }
-    header {
-        padding-bottom: 32px;
+    nav span:not(:last-child) {
+        margin-right: 24px;
     }
-    nav>.nav-top {
-        display: inline-flex;
-        margin-bottom: 16px;
-        padding-left: 32px;
-        margin-top: 24px;
+    nav span:first-child a:first-child {
+        margin-right: 24px;
     }
-    nav>.nav-top a {
-        border-bottom: dotted 1px var(--border-color);
-        padding: 0;
+    nav span:first-child a:not(:first-child):not(:last-child) {
+        margin-right: 6px;
     }
-    nav>.nav-bottom {
-        padding-left: 32px;
-        padding-top: 0;
-        font-size: large;
+    nav img {
+        max-height: 18px;
     }
     p, span {
-        font-size: large;
+        font-size: 18px;
     }
 }

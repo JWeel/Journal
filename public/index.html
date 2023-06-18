@@ -7,23 +7,21 @@
 		<link rel="stylesheet" href="/css/style.css" />
 	</head>
 	<body>
-		<input id="night" type="checkbox" checked />
+        <input id="night" type="checkbox" checked aria-label="toggle alternate colors" />
 		<article>
 			<header>
-				<nav>
-					<div class="nav-top">
-						<a rel="prefetch" href="/"> Joe Weel </a>
-					</div>
-					<div class="nav-bottom">
-						<span>
-							<a class="small-only" rel="prefetch" href="/"> 企 </a>
-							<a rel="prefetch" href="/blog"> Blog </a>
-							<a rel="prefetch" href="/resume"> Resume </a>
-							<a href="mailto:joe@weel.dev"> Contact </a>
-							<a href="https://github.com/JWeel"> GitHub </a>
-						</span>
-					</div>
-				</nav>
+                <nav>
+                    <span aria-label="internal links">
+                        <a rel="prefetch" href="/">Joe Weel</a>
+                        <a rel="prefetch" href="/blog">Blog</a>
+                        <a href="/pdf/cv_2023.pdf">Resume</a>
+                    </span>
+                    <span aria-label="external links">
+                        <a href="mailto:joe@weel.dev">✉</a>
+                        <a id="nav-github" href="https://github.com/JWeel"><img alt="GitHub"/></a>
+                        <a id="nav-linkedin" href="https://linkedin.com/in/joe-weel-dev/"><img alt="LinkedIn"/></a>
+                    </span>
+                </nav>
 			</header>
 			<main>
 				<div class="welcome">

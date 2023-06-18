@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blog - June 18, 2023 · Joe Weel</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/css/style.css" />
+    </head>
+    <body>
+        <input id="night" type="checkbox" checked aria-label="toggle alternate colors" />
+        <article>
+            <header>
+                <nav>
+                    <span aria-label="internal links">
+                        <a rel="prefetch" href="/">Joe Weel</a>
+                        <a rel="prefetch" href="/blog">Blog</a>
+                        <a href="/pdf/cv_2023.pdf">Resume</a>
+                    </span>
+                    <span aria-label="external links">
+                        <a href="mailto:joe@weel.dev">✉</a>
+                        <a id="nav-github" href="https://github.com/JWeel"><img alt="GitHub" /></a>
+                        <a id="nav-linkedin" href="https://linkedin.com/in/joe-weel-dev/"><img alt="LinkedIn" /></a>
+                    </span>
+                </nav>
+            </header>
+            <main>
+                <div class="blog">
+                    <h4> June 18th, 2023 </h4>
+                    <h1> Every project gets these C# extensions </h1>
+                    <p>
+                        I have been developing software in .NET since 2017, primarily using C#. One of my favorite things to use are extension methods, which are static methods that masquerade as instance methods on other types. To me they are most useful for limiting boilerplate code. Depending on how you use them, they also let you write fluent-style code so you can pretend your code is highly sophisticated.
+
+                        Over time I have noticed that whenever I start a new personal project in dotnet, I add the same standard set of extension methods. I will showcase some of them below. I used <a href="https://csharp-colors.xyz/"><u>this site</u></a> to convert the C# code to HTML.
+
+                        You can identify an extension method in C# by the use of keyword <code>this</code> before the first parameter. If you've never made one before or just forgot, remember that they must be placed inside a static class.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public static class</span> <span class="class">Extensions</span>
+                        <span class="punctuation">{</span>
+                            <span class="comment">// place methods here</span>
+                        <span class="punctuation">}</span>
+                    </pre>
+                    <h3> Each </h3>
+                    <p>
+                        In simple terms, for a simple method - it replaces <code>foreach</code> blocks. We used something very similar<sup title="It included support for some custom enumerators. Also, it had a longer name - you can probably guess it.">[1]</sup> at my second job, in all corners of the codebase.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public static void</span> <span class="method">Each</span>&lt;<span class="typeParam">T</span>&gt;(<span class="keyword">this</span> <span class="struct">IEnumerable</span>&lt;<span class="typeParam">T</span>&gt; <span class="parameter">sequence</span>, <span class="class">Action</span>&lt;<span class="typeParam">T</span>&gt; <span class="parameter">action</span>) 
+                        {
+                            <span class="control">foreach</span> (<span class="keyword">var</span> <span class="localName">item</span> <span class="control">in</span> <span class="parameter">sequence</span>)
+                                <span class="parameter">action</span>(<span class="localName">item</span>);
+                        }
+                    </pre>
+                    <p>
+                        Now you may be wondering - why? Well, have you ever started a <code>foreach</code> but still had to filter the sequence passed into it? How are you supposed to indent all that stuff? Every developer I have spoken to has a different opinion on it. There is no way to make it look good:
+                    </p>
+                    <pre class="background">
+                        <span class="control">foreach</span> (<span class="keyword">var</span> <span class="localName">item</span> <span class="control">in</span> <span class="localName">sequence</span>
+                            .<span class="method">Where</span>(<span class="parameter">x</span> =&gt; <span class="method">someConditions</span>(<span class="parameter">x</span>)
+                            .<span class="method">Where</span>(<span class="parameter">x</span> =&gt; <span class="method">someOtherCondition</span>(<span class="parameter">x</span>)))
+                        {
+                            <span class="localName">entity</span>.State = <span class="class">EntityState</span>.Deleted;
+                        }
+                    </pre>
+                    <p>
+                        Enter fluent-style method chains. No more debate on how to indent everything, no more separate lines for each curly brace taking up all your screen. Instead, we can do stuff like this:
+                    </p>
+                    <pre class="background">
+                        <span class="localName">entities</span>
+                            .<span class="method">Where</span>(<span class="parameter">entity</span> =&gt; <span class="method">someCondition</span>(<span class="parameter">entity</span>))
+                            .<span class="method">Where</span>(<span class="parameter">entity</span> =&gt; <span class="method">someOtherCondition</span>(<span class="parameter">entity</span>))
+                            .<span class="method">Each</span>(<span class="parameter">entity</span> =&gt; <span class="parameter">entity</span>.State = <span class="class">EntityState</span>.Deleted);
+                    </pre>
+                    <p>
+                        Now that's just groovy. Any downsides? Well, if your action is not a single statement but a block, then you won't be able to use <code>return</code> to break out of the full method, it will only break out of the action. Compare the following methods to see the difference:
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">void</span> <span class="method">UseExtension</span>(<span class="struct">IEnumerable</span>&lt;<span class="keyword">object</span>&gt; <span class="parameter">sequence</span>)
+                        {
+                            <span class="parameter">sequence</span>.<span class="method">Each</span>(<span class="parameter">item</span> =&gt;
+                            {
+                                <span class="control">return</span>;
+                            }
+                            <span class="comment">// this line will be reached</span>
+                        }
+                    
+                        <span class="keyword">void</span> <span class="method">UseForeach</span>(<span class="struct">IEnumerable</span>&lt;<span class="keyword">object</span>&gt; <span class="parameter">sequence</span>)
+                        {
+                            <span class="control">foreach</span> (<span class="keyword">var</span> <span class="localName">item</span> <span class="control">in</span> <span class="parameter">sequence</span>)
+                            {
+                                <span class="control">return</span>;
+                            }
+                            <span class="comment">// this line will never be reached (assuming sequence has at least one element)</span>
+                        }
+                    </pre>
+                    <h3> Yield </h3>
+                    <p>
+                        Sometimes you need to go from a single element to a sequence. Unfortunately you cannot use the <code>yield</code> keyword except when inside a method that returns <code>IEnumerable</code>. I have seen developers create an array and put the element inside (and probably make an extension method that does it). Seems a little overkill if all you need is an enumerable.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public static</span> <span class="struct">IEnumerable</span>&lt;<span class="class">T</span>&gt; <span class="method">Yield&lt;<span class="class">T</span>&gt;(<span class="keyword">this</span> <span class="class">T</span> <span class="parameter">instance</span>)
+                        {
+                            <span class="control">yield return</span> <span class="parameter">instance</span>;
+                        }
+                    </pre>
+                    <p>
+                        A good example of when this is useful is when you have an early exit out of a method that is supposed to return a sequence, but the early return value is singular.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public</span> <span class="interface">IEnumerable</span>&lt;<span class="typeParam">T</span>&gt; <span class="method">SomeMethod</span>&lt;<span class="typeParam">T</span>&gt;(<span class="keyword">object</span>[] <span class="parameter">bunchOfArguments</span>)
+                        {
+                            <span class="control">if</span> (<span class="method">someEarlyExitCondition</span>())
+                                <span class="control">return</span> <span class="localName">someDefaultValue</span>.<span class="method">Yield</span>();
+                            
+                            ...
+                        }
+                    </pre>
+                    <h3> IsNullOrEmpty </h3>
+                    <p>
+                        This method gets used all the time if you work a lot with strings. The <code>string</code> class has this method as a static method, but using it requires the tedious writing of <code>string</code> everywhere. Moving it to an extension method gets rid of the boilerplate.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public static bool</span> <span class="method">IsNullOrEmpty</span>(<span class="keyword">this string</span> <span class="parameter">value</span>)
+                        {
+                            <span class="control">return</span> <span class="keyword">string</span>.<span class="method">IsNullOrEmpty</span>(<span class="parameter">value</span>);
+                        }
+                    </pre>
+                    <p>
+                        Let's look at the usage:
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">string</span> <span class="localName">s1</span> = <span class="string">&quot;&quot;</span>;
+                        <span class="keyword">string</span> <span class="localName">s2</span> = <span class="keyword">null</span>;
+                    
+                        <span class="control">return</span> <span class="localName">s1</span>.<span class="method">IsNullOrEmpty</span>() &amp;&amp; <span class="localName">s2</span>.<span class="method">IsNullOrEmpty</span>();
+                    </pre>
+                    <p>
+                        Here you can see the beauty (or to some people, the evil) of extension methods. Look at <code>s2</code> - from the outside, it looks like you are calling an instance method on <code>null</code>. However, this is actually just semantic sugar for a static method call where the <code>null</code> value is passed in.
+
+                        This behavior lets you do a lot of cool things, but it can also make the code more difficult to understand if it is not properly marked. Modern code editors will use a different color for the syntax highlighting of static methods and instance methods, but people stubbornly sticking to plain old Notepad will be left behind.
+                    </p>
+                    <h3>Others</h3>
+                    <p>
+                        Taking the idea of <code>IsNullOrEmpty</code> further, a lot of old static methods can (and if you ask me, should) be moved to extension methods. I don't use them often enough to warrant doing it for all my projects, but if I ever make a general purpose Extensions project as a package, these will go there. See for example some static <code>char</code> methods:
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public static bool</span> <span class="method">IsDigit</span><span class="punctuation">(</span><span class="keyword">this char</span> <span class="parameter">c</span><span class="punctuation">)</span> <span class="operator">=&gt;</span>
+                            <span class="keyword">char</span><span class="operator">.</span><span class="method">IsDigit</span><span class="punctuation">(</span><span class="parameter">c</span><span class="punctuation">);</span>
+                
+                        <span class="keyword">public static char</span> <span class="method">ToUpper</span><span class="punctuation">(</span><span class="keyword">this char</span> <span class="parameter">c</span><span class="punctuation">)</span> <span class="operator">=&gt;</span>
+                            <span class="keyword">char</span><span class="operator">.</span><span class="method">ToUpper</span><span class="punctuation">(</span><span class="parameter">c</span><span class="punctuation">);</span>
+                
+                        <span class="keyword">public static char</span> <span class="method">ToLower</span><span class="punctuation">(</span><span class="keyword">this char</span> <span class="parameter">c</span><span class="punctuation">)</span> <span class="operator">=&gt;</span>
+                            <span class="keyword">char</span><span class="operator">.</span><span class="method">ToLower</span><span class="punctuation">(</span><span class="parameter">c</span><span class="punctuation">);</span>
+                
+                        <span class="keyword">public static double</span> <span class="method">GetNumericValue</span><span class="punctuation">(</span><span class="keyword">this char</span> <span class="parameter">c</span><span class="punctuation">)</span> <span class="operator">=&gt;</span>
+                            <span class="keyword">char</span><span class="operator">.</span><span class="method">GetNumericValue</span><span class="punctuation">(</span><span class="parameter">c</span><span class="punctuation">);</span>
+                    </pre>
+                </div>
+            </main>
+            <footer id="footer" class="wrapper alt">
+                <div class="inner">
+                    <a href="/blog">Back to blog overview</a>
+                </div>
+            </footer>
+        </article>
+    </body>
+</html>
