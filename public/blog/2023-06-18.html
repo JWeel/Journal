@@ -28,7 +28,7 @@
                     <h4> June 18th, 2023 </h4>
                     <h1> Every project gets these C# extensions </h1>
                     <p>
-                        I have been developing software in .NET since 2017, primarily using C#. One of my favorite things to use are extension methods, which are static methods that masquerade as instance methods on other types. To me they are most useful for limiting boilerplate code. Depending on how you use them, they also let you write fluent-style code so you can pretend your code is highly sophisticated.
+                        I have been developing software in .NET since 2017, primarily using C#. One of my favorite things to use are extension methods, which are static methods that masquerade as instance methods on other types. To me they are most useful for limiting boilerplate code. Depending on how you use them, they can let you write fluent-style code so you can pretend your code is highly sophisticated.
 
                         Over time I have noticed that whenever I start a new personal project in dotnet, I add the same standard set of extension methods. I will showcase some of them below. I used <a href="https://csharp-colors.xyz/"><u>this site</u></a> to convert the C# code to HTML.
 
@@ -42,7 +42,7 @@
                     </pre>
                     <h3> Each </h3>
                     <p>
-                        In simple terms, for a simple method - it replaces <code>foreach</code> blocks. We used something very similar<sup title="It included support for some custom enumerators. Also, it had a longer name - you can probably guess it.">[1]</sup> at my second job, in all corners of the codebase.
+                        In simple terms, for a simple method - it replaces <code>foreach</code> blocks. We used something very similar<sup class="tooltip">[1]<span>The difference is that it included support for some custom enumerators. Also, it had a slightly longer name - you can probably guess it.</span></sup> at my second job, in all corners of the codebase.
                     </p>
                     <pre class="background">
                         <span class="keyword">public static void</span> <span class="method">Each</span>&lt;<span class="typeParam">T</span>&gt;(<span class="keyword">this</span> <span class="struct">IEnumerable</span>&lt;<span class="typeParam">T</span>&gt; <span class="parameter">sequence</span>, <span class="class">Action</span>&lt;<span class="typeParam">T</span>&gt; <span class="parameter">action</span>) 
@@ -115,6 +115,34 @@
                             ...
                         }
                     </pre>
+                    <h3> GetOrSetDefault </h3>
+                    <p>
+                        The most difficult part of software development is naming things. I cannot tell you how many people have independently come up with this method, but I can tell you that every single one of them gave it a different name. Let's get to it.
+                        When you have a dictionary, you may run into the situation where you want to access a value by key, and if it does not exist yet, then a specific value should be set.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public static</span> <span class="typeParam">TValue</span> <span class="method">GetOrSetDefault</span>&lt;<span class="typeParam">TKey</span>, <span class="typeParam">TValue</span>&gt;(<span class="keyword">this</span> <span class="class">IDictionary</span>&lt;<span class="typeParam">TKey</span>, <span class="typeParam">TValue</span>&gt; <span class="parameter">dictionary</span>,
+                            <span class="typeParam">TKey</span> <span class="parameter">key</span>, <span class="class">Func</span>&lt;<span class="typeParam">TValue</span>&gt; <span class="parameter">defaultValueFunc</span>)
+                        {
+                            <span class="control">if</span> (<span class="parameter">dictionary</span>.<span class="method">TryGetValue</span>(<span class="parameter">key</span>, <span class="keyword">out var</span> <span class="localName">value</span>)
+                                <span class="control">return</span> <span class="localName">value</span>;
+
+                            <span class="keyword">var</span> <span class="localName">defaultValue</span> = <span class="parameter">defaultValueFunc</span>();
+                            <span class="parameter">dictionary</span>[<span class="parameter">key</span>] = <span class="localName">defaultValue</span>;
+                            <span class="control">return</span> <span class="localName">defaultValue</span>;
+                        }
+                    </pre>
+                    <p>
+                        A common use case for this is initializing objects in a dictionary when you cannot (easily) determine all possible keys in advance.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">var</span> <span class="localName">map</span> = <span class="keyword">new</span> <span class="class">Dictionary</span>&lt;<span class="keyword">string</span>, <span class="class">Entity</span>&gt;();
+                        <span class="control">while</span> (someCondition)
+                        {
+                            <span class="keyword">var</span> <span class="localName">entity</span> = <span class="localName">map</span>.<span class="method">GetOrSetDefault</span>(someKey, () =&gt; <span class="keyword">new</span> <span class="class">Entity</span>());
+                            ...
+                        }
+                    </pre>
                     <h3> IsNullOrEmpty </h3>
                     <p>
                         This method gets used all the time if you work a lot with strings. The <code>string</code> class has this method as a static method, but using it requires the tedious writing of <code>string</code> everywhere. Moving it to an extension method gets rid of the boilerplate.
@@ -139,7 +167,7 @@
 
                         This behavior lets you do a lot of cool things, but it can also make the code more difficult to understand if it is not properly marked. Modern code editors will use a different color for the syntax highlighting of static methods and instance methods, but people stubbornly sticking to plain old Notepad will be left behind.
                     </p>
-                    <h3>Others</h3>
+                    <h3> IsDigit and others </h3>
                     <p>
                         Taking the idea of <code>IsNullOrEmpty</code> further, a lot of old static methods can (and if you ask me, should) be moved to extension methods. I don't use them often enough to warrant doing it for all my projects, but if I ever make a general purpose Extensions project as a package, these will go there. See for example some static <code>char</code> methods:
                     </p>
@@ -156,6 +184,35 @@
                         <span class="keyword">public static double</span> <span class="method">GetNumericValue</span><span class="punctuation">(</span><span class="keyword">this char</span> <span class="parameter">c</span><span class="punctuation">)</span> <span class="operator">=&gt;</span>
                             <span class="keyword">char</span><span class="operator">.</span><span class="method">GetNumericValue</span><span class="punctuation">(</span><span class="parameter">c</span><span class="punctuation">);</span>
                     </pre>
+                    <h3> Into </h3>
+                    <p>
+                        Saving the best for last, or the worst? This extension can go off the rails very quickly. It gives you ultimate flexibility, letting you turn anything into a fluent chain of methods. It also can make your code very hard to debug. Buyer beware.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public static</span> <span class="typeParam">TNext</span> <span class="method">Into</span>&lt;<span class="typeParam">TFrom</span>, <span class="typeParam">TNext</span>&gt;(<span class="keyword">this</span> <span class="typeParam">TFrom</span> <span class="parameter">source</span>, <span class="class">Func</span>&lt;<span class="typeParam">TFrom</span>, <span class="typeParam">TNext</span>&gt; <span class="parameter">func</span>)
+                        {
+                            <span class="control">return</span> <span class="parameter">func</span>(<span class="parameter">source</span>);
+                        }
+                    </pre>
+                    <p>
+                        The possibilities are endless. See this example.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">static string</span> <span class="method">GetPropertyName</span>&lt;<span class="typeParam">TSource</span>, <span class="typeParam">TProp</span>&gt;(<span class="class">Expression</span>&lt;<span class="class">Func</span>&lt;<span class="typeParam">TSource</span>, <span class="typeParam">TProp</span>&gt;&gt; <span class="parameter">sourceExpression</span>)
+                        {
+                            <span class="parameter">sourceExpression</span>
+                                .<span class="method">Into</span>(<span class="parameter">expression</span> =&gt; <span class="parameter">expression</span>.Body <span class="keyword">as</span> MemberExpression)
+                                .<span class="method">Into</span>(<span class="parameter">memberExpression</span> =&gt; <span class="parameter">memberExpression</span>.Member <span class="keyword">as</span> MemberInfo)
+                                .<span class="method">Into</span>(<span class="parameter">memberInfo</span> =&gt; <span class="parameter">memberInfo</span>.Name);
+                        }
+                    
+                        <span class="keyword">var</span> <span class="localName">propertyName</span> = <span class="method">GetPropertyName</span>&lt;<span class="keyword">string</span>, <span class="keyword">int</span>&gt;(<span class="parameter">s</span> =&gt; <span class="parameter">s</span>.Length);
+                    </pre>
+                    <p>
+                        In the majority of cases where I use this I am just prototyping something. It lets me write something that is quick and dirty without needing to open up blocks. Once I finish whatever component I am working, I have either cleaned it up or abstracted away enough parts that I no longer need to use <code>Into</code>.
+
+                        However, I have one use case where this method is used in a very elegant and fully intended way. I plan to show that off in a later blog.
+                    </p>
                 </div>
             </main>
             <footer id="footer" class="wrapper alt">

@@ -176,6 +176,9 @@ li>h3 {
 .blog h3 {
     margin-top: 2em;
 }
+.blog p+h3 {
+    margin-top: 0;
+}
 .blog h4 {
     font-size: small;
     margin-top: 1em;
@@ -186,6 +189,26 @@ li>h3 {
 }
 a.accent:hover {
     color: #EEE;
+}
+sup.tooltip {
+    position: relative;
+    display: inline-block;
+}
+sup.tooltip>span {
+    visibility: hidden;
+    width: 300px;
+    background-color: var(--background-secondary);
+    color: var(--text-color-primary);
+    text-align: center;
+    border-radius: 12px;
+    padding: 16px;
+    position: absolute;
+    z-index: 3;
+    top: -5px;
+    left: 110%;
+}
+sup.tooltip:hover>span {
+    visibility: visible;
 }
 .box {
     background-color: var(--background-widget);
@@ -277,6 +300,16 @@ pre.background * {
     }
     p, span {
         font-size: 15px;
+    }
+}
+@media only screen and (max-width: 500px) {
+    sup.tooltip>span {
+        width: 50vw;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 8px;
+        position: fixed;
     }
 }
 @media screen and (min-width: 500px) {
