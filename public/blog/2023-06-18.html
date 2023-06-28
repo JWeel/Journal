@@ -14,7 +14,7 @@
                     <span aria-label="internal links">
                         <a rel="prefetch" href="/">Joe Weel</a>
                         <a rel="prefetch" href="/blog">Blog</a>
-                        <a href="/pdf/cv_2023.pdf">Resume</a>
+                        <a href="/resume">Resume</a>
                     </span>
                     <span aria-label="external links">
                         <a href="mailto:joe@weel.dev">✉</a>
@@ -57,7 +57,7 @@
                     <pre class="background">
                         <span class="control">foreach</span> (<span class="keyword">var</span> <span class="localName">item</span> <span class="control">in</span> <span class="localName">sequence</span>
                             .<span class="method">Where</span>(<span class="parameter">x</span> =&gt; <span class="method">someConditions</span>(<span class="parameter">x</span>)
-                            .<span class="method">Where</span>(<span class="parameter">x</span> =&gt; <span class="method">someOtherCondition</span>(<span class="parameter">x</span>)))
+                                &amp;&amp; <span class="method">someOtherCondition</span>(<span class="parameter">x</span>))
                         {
                             <span class="localName">entity</span>.State = <span class="class">EntityState</span>.Deleted;
                         }
@@ -195,7 +195,7 @@
                         }
                     </pre>
                     <p>
-                        The possibilities are endless. See this example.
+                        The possibilities are endless. See this example:
                     </p>
                     <pre class="background">
                         <span class="keyword">static string</span> <span class="method">GetPropertyName</span>&lt;<span class="typeParam">TSource</span>, <span class="typeParam">TProp</span>&gt;(<span class="class">Expression</span>&lt;<span class="class">Func</span>&lt;<span class="typeParam">TSource</span>, <span class="typeParam">TProp</span>&gt;&gt; <span class="parameter">sourceExpression</span>)
@@ -209,7 +209,7 @@
                         <span class="keyword">var</span> <span class="localName">propertyName</span> = <span class="method">GetPropertyName</span>&lt;<span class="keyword">string</span>, <span class="keyword">int</span>&gt;(<span class="parameter">s</span> =&gt; <span class="parameter">s</span>.Length);
                     </pre>
                     <p>
-                        In the majority of cases where I use this I am just prototyping something. It lets me write something that is quick and dirty without needing to open up blocks. Once I finish whatever component I am working, I have either cleaned it up or abstracted away enough parts that I no longer need to use <code>Into</code>.
+                        In the majority of cases where I use this I am just prototyping. It lets me write something that is quick and dirty without needing to open up blocks. Once I finish whatever component I am working, I have either cleaned it up or abstracted away enough parts that I no longer need to use <code>Into</code>.
 
                         However, I have one use case where this method is used in a very elegant and fully intended way. I plan to show that off in a later blog.
                     </p>

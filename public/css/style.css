@@ -272,6 +272,9 @@ pre.background * {
 .parameter {
     color: var(--code-parameter);
 }
+.img-container {
+  overflow: auto;
+}
 @media screen and (min-width: 1px) {
     #night {
         top: 12px;

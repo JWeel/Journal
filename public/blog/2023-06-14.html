@@ -14,40 +14,43 @@
                     <span aria-label="internal links">
                         <a rel="prefetch" href="/">Joe Weel</a>
                         <a rel="prefetch" href="/blog">Blog</a>
-                        <a href="/pdf/cv_2023.pdf">Resume</a>
+                        <a href="/resume">Resume</a>
                     </span>
                     <span aria-label="external links">
                         <a href="mailto:joe@weel.dev">✉</a>
-                        <a id="nav-github" href="https://github.com/JWeel"><img alt="GitHub"/></a>
-                        <a id="nav-linkedin" href="https://linkedin.com/in/joe-weel-dev/"><img alt="LinkedIn"/></a>
+                        <a id="nav-github" href="https://github.com/JWeel"><img alt="GitHub" /></a>
+                        <a id="nav-linkedin" href="https://linkedin.com/in/joe-weel-dev/"><img alt="LinkedIn" /></a>
                     </span>
                 </nav>
             </header>
             <main>
                 <div class="blog">
                     <h4> June 14th, 2023 </h4>
-                    <h1> Start of this website </h1>
+                    <h1> Reflections on creating a static html website in 2023 </h1>
+                    <p>
+                        Web development and the internet as a whole have changed dramatically over the last decade plus. When I was in college for my artificial intelligence degree, I had one class on web development. We learned the foundational technologies that over time have given way to the complex technology you find powering the websites of today. Most are built with extensive javascript frameworks, and people call websites built by these web apps because that sounds cooler.
+
+                        And yet, there are still some stubborn people out there who find some incomprehensible joy in doing it the hard way. Writing everything yourself. It may be because of the challenge, or to help foster an understanding of the whole stack, or if it is really incomprehensible then I should not be trying to explain it. Nevertheless, I wanted to do the same. So it was time to make my own website.
+                    </p>
                     <h3> The domain name </h3>
                     <p>
-                        For the past few months I had been thinking of getting my own domain name. I was deciding both on the TLD (top-level domain, the part on the right side of a domain, like <i>.com</i>), and on the SLD (second-level domain, the part to the left of the <i>.com</i>). I had no intention of going after a <i>.com</i> (because those are really expensive). Instead I wanted one of the newer TLDs that are cheaper and less common. I saw the <i>.dev</i> TLD and it immediately appealed to the software <i>developer</i> part of my being. I'm sure lots of developers had the same experience.
+                        It should come as no surprise that as a software <i>developer</i> I wanted a <i>.dev</i> top-level domain (TLD). Unlike the popular ones like <i>.com</i>, you can probably still find your own name available with the <i>.dev</i> TLD. At least that was the case when I wrote this blog article.
 
-                        I wanted a domain name that was simple and short. The three letter TLD <i>.dev</i> was a great start. As for the SLD, I wanted something short also. If this is supposed to be a personal website, why not my own last name? It would be <i>weel.dev</i>, and it seemed perfect! Unfortunately, it was already taken.
+                        The pattern <i>first letter of first name</i> + <i>entirety of last name</i> is one you are no doubt familiar with. Businesses love using this combination for the email addresses of their employees. My name is Joe Weel, and I have had multiple <i>jweel@company</i> addresses or accounts. It came as a surprise, however, when the domain registrar I was looking up domain names on told me that <i>jweel</i> is a misspelling of <i>jewel</i>. Cue existential crisis.
 
-                        I proceeded to try some combinations of my last name with either my first name or just first letters, and eventually found the acceptable combination <i>jweel.dev</i>. The pattern first letter + last name is quite common across multiple industries, especially for stuff like business accounts. Therefore, <i>jweel</i> was already familiar to me. It is used by my employer for my company email address, and it is my screen name on GitHub.
-
-                        It was then that the domain registrar told me to watch out, because <i>jweel</i> could be seen as a typo for <i>jewel</i>. Queue existential crisis. My name is just a typo for <i>jewel</i>? Am I in the wrong industry? This set me back months. I gave up and forgot about buying a domain.
-
-                        But then, on a whim months later, I looked up <i>weel.dev</i> again, and was surprised to find it now available. Twelve bucks for a year? Sure, sign me up. And that's how I got my own domain name.
+                        So instead, I used only my last name for the domain. I would find out a few weeks later that the literal day after I purchased the domain, the domain registrar was sold. But that's next year's problem.
                     </p>
-                    <h3> The website </h3>
+                    <h3> Hosting </h3>
                     <p>
-                        So I bought the domain name, but now what? Obviously I had to find some way to use it. I found that my domain registrar would let me forward arbitrary email addresses ending on <i>weel.dev</i> to my actual email address. I set it up and tested it out. It did not work. It sent correctly but I never received it. Turns out some email providers will automatically ignore emails in the inbox if they are sent from the same address. Makes sense, but no one ever told me that.
+                        I may have learned about web infrastructure and setting up a web server in college, but nowadays none of that is necessary when you can just find a random web hosting service where you can put your content and have them handle everything else. In some cases, as long as web traffic is low enough, they even host for free.
 
-                        But I needed to do more. It was almost midnight, my wife had gone to sleep, why not hack together a little website? I knew web development is dramatically different now than how it was 10 years ago, when I learned some in college. Sure, I work on web applications and even setting up web infrastructure in my professional career, but doing everything from scratch is a different ball game. It is also, nowadays at least, an extremely simple and straightforward ball game.
+                        The most difficult thing in this whole process for me, (so far in my career) primarily a .NET engineer, was having to install <i>node.js</i>. But I knew that day would come eventually, so might as well be now. Download some scripts, use them to push some html, and website is up.
+                    </p>
+                    <h3> Content </h3>
+                    <p>
+                        Barebones html and css, no scripting, no cookies. That's my thought process at the onset of my new website.
 
-                        I was trying to figure out how to get SSL certification when I saw that there are platforms where you can host static content for free. Just install <i>node</i>, download some scripts, use them to push some html, and done! Next put in the custom domain name, and let the domain registrar know, and sit tight. It said I had to wait up to 24 hours. It only took 5 minutes. My website was live. And apart from the domain name, it's all free.
-
-                        Personal website is up. Write a quick blog article, upload, and call it a day. See you next time.
+                        Of course what that means is fiddling with placement for hours. I spend the next entire day tinkering with css files because I am too stubborn to use some existing template. If you have ever done the same, this is the moment where you realise why all those javascript packages are so popular. Apparently, simplicity is a time suck.
                     </p>
                 </div>
             </main>
