@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blog - July 23, 2023 · Joe Weel</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/css/style.css" />
+    </head>
+    <body>
+        <input id="night" type="checkbox" checked aria-label="toggle alternate colors" />
+        <article>
+            <header>
+                <nav>
+                    <span aria-label="internal links">
+                        <a rel="prefetch" href="/">Joe Weel</a>
+                        <a rel="prefetch" href="/blog">Blog</a>
+                        <a href="/resume">Resume</a>
+                    </span>
+                    <span aria-label="external links">
+                        <a href="mailto:joe@weel.dev">✉</a>
+                        <a id="nav-github" href="https://github.com/JWeel"><img alt="GitHub" /></a>
+                        <a id="nav-linkedin" href="https://linkedin.com/in/joe-weel/"><img alt="LinkedIn" /></a>
+                    </span>
+                </nav>
+            </header>
+            <main>
+                <div class="blog">
+                    <h4> July 23rd, 2023 </h4>
+                    <h1> Dispose is not just for disposing </h1>
+                    <p>
+                        If you have worked in .NET or any other language that features the <a href="https://en.wikipedia.org/wiki/Dispose_pattern"><i>dispose pattern</i></a>, you will probably have written your fair share of <code>using</code> statements (or the equivalent in other languages). The dispose pattern is pretty straightforward. You have some resource that you want to access and then get rid of it once you are done. In .NET this is especially relevant for <i>unmanaged</i> resources. Unlike <i>managed</i> resources, which the garbage collector cleans up after you're done with them, <i>unmanaged</i> resources need to be cleaned up manually.
+
+                        A common example of this is in file IO. You want to access some file but have to make sure that the file handle is released so that other processes can access it. You wrap your code that interacts with the file inside a <code>using</code> block, and you can feel good about yourself because now everything is clean and tidy.
+
+                        But what if I told you that you can leverage the built-in support for this dispose pattern, the <code>using</code> statement, to write scoped code? If you are not aware what the <code>using</code> statement does - it is semantic sugar for <i>try-finally</i>, where the part inside the <code>using</code> statement is put in the <i>try</i> and the <code>Dispose</code> method is called for the object being <code>used</code> inside the <i>finally</i>. So essentially, it's a delayed call of an arbitrary method.
+
+                        With this knowledge, we can create scopes - parts of program control flow in which state is processed differently than in the rest.
+                    </p>
+                    <h3> Defining the class </h3>
+                    <p>
+                        Let us define a scope. When the scope is created, we can invoke an initial action. When the scope ends, we can invoke a wrap-up action. The code should be self-explanatory. Just like in <a href="./2023-06-18">my previous article</a>, I used <a href="https://csharp-colors.xyz/"><u>this site</u></a> to convert the C# code to HTML. The barebones class:
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public class</span> <span class="class">Scope</span> : <span class="interface">IDisposable</span>
+                        {
+                            <span class="keyword">protected</span> <span class="class">Action</span> _after;
+
+                            <span class="keyword">public</span> <span class="class">Scope</span>(<span class="class">Action</span> <span class="parameter">before</span>, <span class="class">Action</span> <span class="parameter">after</span>)
+                            {
+                                _after = <span class="parameter">after</span>;
+                                <span class="parameter">before?.Invoke</span>();
+                            }
+
+                            <span class="keyword">public void</span> <span class="method">Dispose</span>()
+                            {
+                                _after?.Invoke();
+                            }
+                        }
+                    </pre>
+                    <p>
+                        Depending on how you use these scopes, you may want to wrap the calling of the initial action inside a <i>try-catch</i> where you call <code>Dispose</code> (which calls the wrap-up action) if an exception was caught. In that case, the constructor could look like this:
+                    </p>
+                    <pre class="background">
+                            <span class="keyword">public</span> <span class="class">Scope</span>(<span class="class">Action</span> <span class="parameter">before</span>, <span class="class">Action</span> <span class="parameter">after</span>)
+                            {
+                                _after = <span class="parameter">after</span>;
+                                <span class="control">try</span>
+                                {
+                                    <span class="parameter">before</span>();
+                                }
+                                <span class="control">catch</span>
+                                {
+                                    <span class="keyword">this</span>.<span class="method">Dispose</span>();
+                                    <span class="control">throw</span>;
+                                }
+                            }
+                    </pre>
+                    <p>
+                        There is a lot more we can add to this. We can support multiple before and after actions, maybe with a fancy <code>params</code> signature to support arbitrary lengths (just need to wrap the <i>before</i> and <i>after</i> inside a new type). Better yet, we can change this whole thing to be an abstract class with abstract void methods <code>Before</code> and <code>After</code>, which would make the inheritor code more ergonomic (passing actions to the base is so barbaric). But instead of doing that, we can have more fun by moving on to the use cases.
+                    </p>
+                    <h3> Change Tracking </h3>
+                    <p>
+                        If you have objects with mutable state, you might be using a system that tracks changes and persists only those changes to your data store. Entity Framework is an example of a system that works like this: its entities are attached to an <code>EntityEntry</code> which keeps track of all current and modified values. When you are working with objects like these, there may be moments where you need to set values but not have the entity flagged as being modified. Depending on your implementation of change tracking, a scope can be an elegant solution here.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public class</span> <span class="class">NoChangeTrackingScope</span>&lt;<span class="typeParam">T</span>&gt; : <span class="interface">IDisposable</span>
+                            <span class="keyword">where</span> <span class="typeParam">T</span> : <span class="interface">ITrackChanges</span>
+                        {
+                            <span class="keyword">public</span> <span class="class">NoChangeTrackingScope</span>(<span class="typeParam">T</span> <span class="parameter">entity</span>)
+                            {
+                                <span class="parameter">entity</span>.TrackChanges = <span class="keyword">false</span>;
+                            }
+
+                            <span class="keyword">public void</span> <span class="method">Dispose</span>()
+                            {
+                                entity.TrackChanges = <span class="keyword">true</span>;
+                            }
+                        }
+                    </pre>
+                    <p>
+                        Once again, the actual implementation will depend on how your system handles change tracking. In the case of Entity Framework, you may need to call <code>AcceptChanges</code> first in the constructor.
+
+                        In a codebase I worked on, we used a system like this when setting primary keys. We had two layers of entities, one leveraging Entity Framework to interact with the database, the other interacting with this layer to present the entities to the API. Due to there being an inbetween layer, it made it possible to switch the backing technology from one technology to another with very little additional work, like from ADO.NET to Entity Framework<sup class="tooltip">[1]<span>Entity Framework uses ADO.NET under the hood so is this technically a migration from ADO.NET to ADO.NET?</span></sup>. Setting the primary keys normally would flag the entity as being changed. A perfect use case for this scope.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">using</span> (<span class="keyword">new</span> <span class="class">NoChangeTrackingScope</span>&lt;<span class="class">Foo</span>&gt;(<span class="keyword">this</span>))
+                        {
+                            <span class="keyword">this</span>.Key = key;
+                        }
+                    </pre>
+                    <h3> Scissoring in MonoGame </h3>
+                    <p>
+                        With that half-theoretical example out of the way, let's go to a more practical one. The caveat - this relies on and augments the MonoGame infrastructure. MonoGame, if you are unfamiliar with it, is a framework for writing games or any applications leveraging a graphical interface in <i>C#</i>.
+
+                        In MonoGame, graphics are sent to the client screen through a buffer. While in the buffer, you can specify a region of the screen (defined by a rectangle) outside of which all graphics are cut. This is called the <i>scissor rectangle</i>. It is useful when painting large scenes, where for reasons of efficiency and performance you may not want to render something the user will not see anyway, because something else may later be drawn over it.
+
+                        For this code I am using as base the <code>Scope</code> class exactly as it was defined earlier in this article.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public class</span> <span class="class">ScissorScope</span> : <span class="class">Scope</span>
+                        {
+                            <span class="keyword">public</span> <span class="class">ScissorScope</span>(<span class="class">GraphicsDevice</span> <span class="parameter">device</span>, <span class="class">Rectangle</span> <span class="parameter">rectangle</span>)
+                                : <span class="keyword">base</span>(<span class="class">ScissorScope</span>.<span class="method">CreateAction</span>(<span class="parameter">device</span>, <span class="parameter">rectangle</span>),
+                                       <span class="class">ScissorScope</span>.<span class="method">CreateAction</span>(<span class="parameter">device</span>, <span class="parameter">device</span>.ScissorRectangle))
+                            {
+                            }
+                    
+                            <span class="keyword">protected static</span> <span class="class">Action</span> <span class="method">CreateAction</span>(<span class="class">GraphicsDevice</span> <span class="parameter">device</span>, <span class="class">Rectangle</span> <span class="parameter">rectangle</span>) =&gt;
+                                () =&gt; <span class="parameter">device</span>.ScissorRectangle = <span class="parameter">rectangle</span>;
+                        }
+                    </pre>
+                    <p>
+                        Note the important detail - when creating the <i>after</i> action that is passed to the base, the scissor rectangle that is in use before the scope starts is passed in (through <code>device</code>). The action holds this rectangle and can then restore it after the scope ends. If there were no <code>base</code> to call here, then we could simply store the rectangle in the constructor before calling the <i>before</i> action.
+
+                        We can now use this scope while inside the MonoGame <code>Draw</code> method. See this example from one of my personal projects (with changes for brevity):
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">protected override void</span> <span class="method">Draw</span>(<span class="class">GameTime</span> <span class="parameter">gameTime</span>)
+                        {
+                            <span class="keyword">this</span>.GraphicsDevice.<span class="method">Clear</span>(<span class="class">Color</span>.Black);
+                
+                            <span class="keyword">using</span> (<span class="keyword">new</span> <span class="class">ScissorScope</span>(<span class="keyword">this</span>.GraphicsDevice, <span class="keyword">this</span>.ScissorContainer))
+                            {
+                                <span class="keyword">this</span>.SpriteBatch.<span class="method">Begin</span>(<span class="class">SpriteSortMode</span>.FrontToBack, <span class="class">BlendState</span>.AlphaBlend,
+                                    <span class="class">SamplerState</span>.PointWrap, rasterizerState: <span class="keyword">this</span>.ScissorRasterizer);
+                                <span class="keyword">this</span>.OnDraw?.<span class="method">Invoke</span>&lt;<span class="class">BackgroundDraw</span>&gt;(<span class="keyword">this</span>.SpriteBatch);
+                                <span class="keyword">this</span>.SpriteBatch.<span class="method">End</span>();
+                            }
+                
+                            <span class="keyword">this</span>.SpriteBatch.<span class="method">Begin</span>(<span class="class">SpriteSortMode</span>.Deferred, <span class="class">BlendState</span>.AlphaBlend, <span class="class">SamplerState</span>.PointClamp);
+                            <span class="keyword">this</span>.OnDraw?.<span class="method">Invoke</span>&lt;<span class="class">ControlDraw</span>&gt;(<span class="keyword">this</span>.SpriteBatch);
+                            <span class="keyword">this</span>.SpriteBatch.<span class="method">End</span>();
+                        }
+                    </pre>
+                    <p>
+                        With all the boilerplate code moved to the <code>ScissorScope</code>, this method can focus on just control flow.
+                    </p>
+                    <h3> Custom Dependency Injection </h3>
+                    <p>
+                        The scope pattern I have been describing in this article is powerful yet simple. I have one final example from my own projects where I use it, but it sits deep inside a complex piece of dependency injection infrastructure. I want to show this one to demonstrate that in the midst of complexity it is all the more important to incorporate the simplicity of patterns like this one.
+
+                        I am using the <code>Into</code> extension method I shared in <a href=2023-06-18#into><u>an earlier article</u></a> in the below example. Note also that I am passing to the base <code>Scope</code> constructor a <code>ScopedOperation</code> which is nothing more than a wrapper around <i>before</i> and <i>after</i> actions.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public class</span> <span class="class">DependencyScope</span> : <span class="class">Scope</span>
+                        {
+                            <span class="keyword">public</span> <span class="class">DependencyScope</span>(<span class="class">DependencyHandler</span> <span class="parameter">dependency</span>)
+                                : <span class="keyword">base</span>(<span class="keyword">new</span> <span class="class">List</span>&lt;<span class="class">Type</span>&gt;().<span class="class">Into</span>(<span class="parameter">typeList</span> =&gt; <span class="keyword">new</span> <span class="class">ScopedOperation</span>(
+                                    <span class="class">DependencyScope</span>.<span class="method">CreatePreOperation</span>(<span class="parameter">dependency</span>, <span class="parameter">typeList</span>),
+                                    <span class="class">DependencyScope</span>.<span class="method">CreatePostOperation</span>(<span class="parameter">dependency</span>, <span class="parameter">typeList</span>))))
+                            {
+                            }
+                    
+                            <span class="keyword">protected static</span> <span class="class">Action</span> <span class="method">CreatePreOperation</span>(<span class="class">DependencyHandler</span> <span class="parameter">dependency</span>, <span class="class">List</span>&lt;<span class="class">Type</span>&gt; <span class="parameter">typeList</span>) =&gt;
+                                () =&gt; <span class="parameter">dependency</span>.OnRegister += <span class="parameter">type</span> =&gt; <span class="parameter">typeList</span>.<span class="method">Add</span>(<span class="parameter">type</span>);
+                    
+                            <span class="keyword">protected static</span> <span class="class">Action</span> <span class="method">CreatePostOperation</span>(<span class="class">DependencyHandler</span> <span class="parameter">dependency</span>, <span class="class">List</span>&lt;<span class="class">Type</span>&gt; <span class="parameter">typeList</span>) =&gt;
+                                () =&gt; <span class="parameter">typeList</span>.<span class="method">Each</span>(<span class="parameter">type</span> =&gt; <span class="parameter">dependency</span>.<span class="method">Unregister</span>(<span class="parameter">type</span>));
+                        }
+                    </pre>
+                    <p>
+                        Using <code>Into</code> here lets me preserve the list as I pass it into two different methods while still inside a call to <code>base</code>.
+
+                        As for what this scope does, let me explain the dependency injection infrastructure I am using here. The <code>DependencyHandler</code> manages the registration of various dependencies that are bound to a node in the dependency tree. There may be multiple nodes but there is one root. The dependencies are registered top-down, and each dependency is registered by type. This scope comes into play because some dependency nodes may register the same type as others but without sharing actual instances. This means that the same type is registered multiple times, but since they are registered within a scope, it will not affect the registration of other nodes.
+
+                        Here is an example of a non-root node using this scope to register dependencies. Other nodes will get different dependency instances if they register the same types as those within this scope.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public void</span> <span class="method">Register</span>(<span class="class">DependencyHandler</span> <span class="parameter">dependency</span>)
+                        {
+                            <span class="keyword">this</span>.Configuration = <span class="parameter">dependency</span>.<span class="method">Register</span>&lt;<span class="class">ConfigurationHelper</span>&gt;();
+                            <span class="keyword">using</span> (<span class="keyword">new</span> <span class="class">DependencyScope</span>(<span class="parameter">dependency</span>))
+                            {
+                                <span class="keyword">this</span>.Camera = <span class="parameter">dependency</span>.<span class="method">Register</span>&lt;<span class="class">CameraHelper</span>&gt;();
+                                <span class="keyword">this</span>.Tilemap = <span class="parameter">dependency</span>.<span class="method">Register</span>&lt;<span class="class">TilemapHelper</span>&gt;();
+                            }
+                        }
+                    </pre>
+                    <p>
+                        In this example the <code>ConfigurationHelper</code> type is registered outside of the scope, which means this dependency is shared with the rest of the dependency tree. The other two types are registered inside the scope, which means the instances of those dependencies are unique to this node.
+
+                        What I hoped to show in this and all the earlier examples is that the code where a scope is being used ends up simple and clean. Move the boilerplate out of the way and not only will your writing be smooth, it also becomes easier to read years later. Years later being when you look back at your old code and wonder why the heck did you write an entire dependency injection system?
+                    </p>
+                </div>
+            </main>
+            <footer id="footer" class="wrapper alt">
+                <div class="inner">
+                    <a href="/blog">Back to blog overview</a>
+                </div>
+            </footer>
+        </article>
+    </body>
+</html>

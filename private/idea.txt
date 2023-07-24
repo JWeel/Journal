@@ -1,0 +1,3 @@
+future blog ideas
+
+- favorite code blog posts, e.g. the option pattern in c# which uses NoneOption with implicit cast

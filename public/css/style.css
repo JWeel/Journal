@@ -202,13 +202,18 @@ sup.tooltip>span {
     text-align: center;
     border-radius: 12px;
     padding: 16px;
-    position: absolute;
     z-index: 3;
-    top: -5px;
-    left: 110%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: fixed;
 }
 sup.tooltip:hover>span {
     visibility: visible;
+}
+.fragment {
+    position: absolute;
+    margin-top: -48px;
 }
 .box {
     background-color: var(--background-widget);
@@ -305,14 +310,10 @@ pre.background * {
         font-size: 15px;
     }
 }
-@media only screen and (max-width: 500px) {
+@media screen and (max-width: 500px) {
     sup.tooltip>span {
         width: 50vw;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
         padding: 8px;
-        position: fixed;
     }
 }
 @media screen and (min-width: 500px) {
