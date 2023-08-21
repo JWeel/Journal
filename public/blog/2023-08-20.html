@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blog - August 20, 2023 · Joe Weel</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/css/style.css" />
+    </head>
+    <body>
+        <input id="night" type="checkbox" checked aria-label="toggle alternate colors" />
+        <article>
+            <header>
+                <nav>
+                    <span aria-label="internal links">
+                        <a rel="prefetch" href="/">Joe Weel</a>
+                        <a rel="prefetch" href="/blog">Blog</a>
+                        <a href="/resume">Resume</a>
+                    </span>
+                    <span aria-label="external links">
+                        <a href="mailto:joe@weel.dev">✉</a>
+                        <a id="nav-github" href="https://github.com/JWeel"><img alt="GitHub" /></a>
+                        <a id="nav-linkedin" href="https://linkedin.com/in/joe-weel/"><img alt="LinkedIn" /></a>
+                    </span>
+                </nav>
+            </header>
+            <main>
+                <div class="blog">
+                    <h4> August 20th, 2023 </h4>
+                    <h1> Do not relegate the delegate </h1>
+                    <p>
+                        If you are a software engineer, you have probably defined a lot of <i>classes</i> and <i>interfaces</i>. You will likely have also defined <i>structs</i> and <i>enums</i>. If you write in modern C# or Java then perhaps you have even played around with <i>record</i> types. These are all data constructs, but there are other things you can define. Depending on the kind of projects you work on, you are either intimately familiar with <i>events</i> or just see them once in a blue moon. But how many times have you defined a <i>delegate</i>?
+
+                        I will now be talking specifically about .NET. Before the introduction of <code>Action</code> and <code>Func</code> in .NET 3.5, delegates were more common. Some of the older technology from .NET framework uses them a lot, like ADO.NET. They are also still common for the boilerplate event handlers in WPF and WinForms, even though those can be replaced by <code>Actions</code> or <code>Funcs</code>.
+
+                        In fact, a lot of existing delegates can be replaced by <code>Funcs</code>, like <code>Predicate&lt;T&gt;</code> which is equivalent to <code>Func&lt;T, bool&gt;</code>. The former is semantically clearer, but unfortunately the extension methods from <i>Linq</i> do not accept these older delegates (and the compiler will get confused if you try to make such a method yourself). Should <code>Enumerable.Where</code> have taken a <code>Predicate&lt;T&gt;</code> instead of <code>Func&lt;T, bool&gt;</code>? Arguments can be made for both sides. I'll leave that to you.
+
+                        Instead, in this article I would like to show you that there are still some cool delegates you can make that can be useful in various situations.
+                    </p>
+                    <h3> TryParse&lt;T&gt; </h3>
+                    <p>
+                        Parsing in object-oriented languages usually refers to translating a string value to a value of a different type. Most of the built-in structs of .NET define static <code>Parse</code> and <code>TryParse</code> methods. The difference between the two is that the former will throw if unable to parse, while the latter instead returns a boolean value that indicates whether the parse was succesful. The actual parsed value in a <code>TryParse</code> is returned in an <code>out</code> parameter, and that is where we see something not possible in a <code>Func</code>.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public delegate bool</span> <span class="delegate">TryParse</span>&lt;<span class="typeParam">T</span>&gt;(<span class="keyword">string</span> <span class="parameter">value</span>, <span class="keyword">out</span> <span class="typeParam">T</span> <span class="parameter">result</span>);
+                    </pre>
+                    <p>
+                        With this new delegate, we can write a generic method that processes parsing. An example use case is implementing the decorator pattern where we want to write to a log everytime someone parses a string, so that over the lifetime of our application we can keep track of all values that have been parsed.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public bool</span> <span class="method">TryParseAndLog</span>&lt;<span class="typeParam">T</span>&gt;(<span class="keyword">string</span> <span class="parameter">source</span>, <span class="class">TryParse</span>&lt;<span class="typeParam">T</span>&gt; <span class="parameter">tryParse</span>, <span class="keyword">out</span> <span class="typeParam">T</span> <span class="parameter">result</span>)
+                        {
+                            <span class="comment">// write source to log</span>
+                            ...
+                        
+                            <span class="control">return</span> <span class="parameter">tryParse</span>(<span class="parameter">source</span>, <span class="keyword">out</span> <span class="parameter">result</span>);
+                        }
+                    </pre>
+                    <p>
+                        Using this method would look like this:
+                    </p>
+                    <pre class="background">
+                        <span class="method">TryParseAndLog</span>&lt;<span class="keyword">int</span>&gt;(<span class="string">&quot;123&quot;</span>, <span class="keyword">int</span>.<span class="method">TryParse</span>, <span class="keyword">out var</span> <span class="localName">intResult</span>);
+
+                        <span class="method">TryParseAndLog</span>&lt;<span class="keyword">double</span>&gt;(<span class="string">&quot;1.23&quot;</span>, <span class="keyword">double</span>.<span class="method">TryParse</span>, <span class="keyword">out var</span> <span class="localName">doubleResult</span>);
+                    </pre>
+                    <p>
+                        Note how the existing <code>TryParse</code> methods from the built-in types fit perfectly.
+                    </p>
+                    <h3> TryGet&lt;TSource, TOut&gt; </h3>
+                    <p>
+                        If you break apart <code>TryParse&lt;T&gt;</code>, you will find that it is essentially a <code>TryGet&lt;TSource, TOut&gt;</code> with the <code>TSource</code> preset to <i>string</i>. There are plenty of cases where the source will not be a string, so it should be worth defining this as another delegate.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public delegate bool</span> <span class="delegate">TryGet</span>&lt;<span class="typeParam">TSource</span>, <span class="typeParam">TOut</span>&gt;(<span class="typeParam">TSource</span> <span class="parameter">source</span>, <span class="keyword">out</span> <span class="typeParam">TOut</span> <span class="parameter">value</span>);
+                    </pre>
+                    <p>
+                        To show the usefulness of this delegate, let me sketch the scenario. We have a sequence of keys, and we have a dictionary that may or may not contain items mapped to those keys. We want to iterate over the keys, finding only the ones that exist in the dictionary, and process the corresponding items.
+
+                        Using <code>Enumerable.Where</code> from <i>Linq</i> will not suffice here, because it does not translate the keys to mapped values. Likewise, <code>Enumerable.Select</code> will not work because it does not filter to only those keys that are in the dictionary. Without this delegate, we would have to write a <i>foreach</i> loop, call <code>TryGetValue</code> on the dictionary, and use <i>continue</i> if the key is not in the dictionary. However, there are times where a <i>foreach</i> loop is not viable, perhaps because your method is passed an enumerable that should not be exhausted.
+
+                        To solve this, let us define our own enumerable extension method that uses this new delegate.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public static</span> <span class="struct">IEnumerable</span>&lt;(<span class="typeParam">TSource</span> Source, <span class="typeParam">TOut</span> Out)&gt; <span class="method">WhereOut</span>&lt;<span class="typeParam">TSource</span>, <span class="typeParam">TOut</span>&gt;(
+                            <span class="keyword">this</span> <span class="struct">IEnumerable</span>&lt;<span class="typeParam">TSource</span>&gt; <span class="parameter">source</span>, <span class="class">TryGet</span>&lt;<span class="typeParam">TSource</span>, <span class="typeParam">TOut</span>&gt; <span class="parameter">tryGet</span>)
+                        {
+                            <span class="keyword">var</span> <span class="localName">enumerator</span> = <span class="parameter">source</span>.<span class="method">GetEnumerator</span>();
+                            <span class="control">while</span> (<span class="localName">enumerator</span>.<span class="method">MoveNext</span>())
+                            {
+                                <span class="keyword">var</span> <span class="localName">current</span> = <span class="localName">enumerator</span>.Current;
+                                <span class="control">if</span> (<span class="parameter">tryGet</span>(<span class="localName">current</span>, <span class="keyword">out var</span> <span class="localName">value</span>))
+                                {
+                                    <span class="control">yield return</span> (<span class="localName">current</span>, <span class="localName">value</span>);
+                                }
+                            }
+                        }
+                    </pre>
+                    <p>
+                        Here I am preserving the key in the returned tuples, but depending on your use case, you may only need to return the mapped item. With this method defined, we can loop through our keys elegantly. In the following example, I am using the <code>Each</code> extension method defined in <a href=2023-06-18#each><u>an earlier article</u></a>.
+                    </p>
+                    <pre class="background">
+                        someKeys
+                            .<span class="method">WhereOut</span>&lt;<span class="typeParam">TKey</span>, <span class="typeParam">TItem</span>&gt;(<span class="localName">dictionary</span>.TryGetValue)
+                            .<span class="method">Each</span>(<span class="parameter">tuple</span> =&gt;
+                            {
+                                <span class="keyword">var</span> (<span class="localName">key</span>, <span class="localName">item</span>) = <span class="parameter">tuple</span>;
+                        
+                                ...
+                            });
+                    </pre>
+                    <p>
+                        Unfortunately, we must still specify <code>TKey</code> and <code>TValue</code> when calling <code>WhereOut</code>, because the compiler is not smart enough to infer them. Nevertheless, the code is cleaner than before.
+                    </p>
+                    <h3> AssessChange&lt;T&gt; </h3>
+                    <p>
+                        This delegate represents a function that takes two values that embody a change - the <i>before</i> and the <i>after</i>. Feel free to give this a different name, naming is hard after all.
+                    </p>
+                    <pre class="background">
+                        <span class="keyword">public delegate void</span> <span class="delegate">AssessChange</span>&lt;<span class="typeParam">T</span>&gt;(<span class="typeParam">T</span> <span class="parameter">before</span>, <span class="typeParam">T</span> <span class="parameter">after</span>);
+                    </pre>
+                    <p>
+                        Unlike the previous examples, this does not use any special keywords like <code>out</code>, and could therefore be replaced by an <code>Action</code>. So why use it? The reason is that we can define the parameter names, thereby clarifying which of the two parameters is <i>before</i> and which is <i>after</i>. I can use <i>named parameters</i> to showcase this idea:
+                    <pre class="background">
+                        <span class="keyword">void</span> <span class="method">Foo</span>(<span class="class">AssessChange</span>&lt;<span class="keyword">int</span>&gt; <span class="parameter">assessChange</span>)
+                        {
+                            <span class="parameter">assessChange</span>(before: <span class="numericLiteral">1</span>, after: <span class="numericLiteral">2</span>);
+                        }
+                    </pre>                        
+                    <p>
+                        I would use a delegate such as this one solely to make my code easier to understand and maintain. If I am reviewing code where someone is invoking some <code>Action&lt;T, T&gt;</code> to react to a change, I would have to spend additional time delving into the code to figure out which of the action's two parameters is <i>before</i> and which is <i>after</i>. Comments and documentation in code are important and useful, but far superior is expressing intent through clear names and types. When it comes to understanding (necessary for maintenance and implementation), the less you have to read, the better.
+                    </p>
+                </div>
+            </main>
+            <footer id="footer" class="wrapper alt">
+                <div class="inner">
+                    <a href="/blog">Back to blog overview</a>
+                </div>
+            </footer>
+        </article>
+    </body>
+</html>
