@@ -162,6 +162,10 @@ li>h3 {
 .overview h3 {
     font-weight: lighter;
 }
+.overview ul:last-child
+{
+    margin-bottom: 4em;
+}
 .blog p {
     margin-top: -1em;
     white-space: pre-line;
